@@ -1,5 +1,5 @@
 'use client'
-
+import { Analytics } from "@vercel/analytics/next"
 import { useState, useRef } from 'react'
 import { Plane, Search, AlertCircle, Loader2 } from 'lucide-react'
 import SearchBar from '@/components/search-bar'
@@ -194,6 +194,7 @@ export default function Home() {
           </div>
         )}
       </main>
+      <Analytics />
     </div>
   )
 }
