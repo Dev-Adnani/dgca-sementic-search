@@ -1,0 +1,11 @@
+PyMuPDF
+openai
+pinecone
+python-dotenv
+tqdm
+selenium
+requests
+beautifulsoup4
+lxml
+urllib3
+webdriver-manager
