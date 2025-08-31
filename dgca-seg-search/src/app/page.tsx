@@ -1,5 +1,5 @@
 'use client'
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from '@vercel/analytics/next'
 import { useState, useRef } from 'react'
 import { Plane, Search, AlertCircle, Loader2 } from 'lucide-react'
 import SearchBar from '@/components/search-bar'
@@ -159,38 +159,6 @@ export default function Home() {
               reports from the Directorate General of Civil Aviation (DGCA)
               using advanced semantic search.
             </p>
-            <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="rounded-lg bg-white p-6 shadow-sm">
-                <Search className="mb-3 h-8 w-8 text-blue-600" />
-                <h3 className="mb-2 font-semibold text-gray-900">
-                  Smart Search
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Use natural language to find relevant aviation reports and
-                  incidents
-                </p>
-              </div>
-              <div className="rounded-lg bg-white p-6 shadow-sm">
-                <AlertCircle className="mb-3 h-8 w-8 text-yellow-600" />
-                <h3 className="mb-2 font-semibold text-gray-900">
-                  Categorized
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Filter between incident and accident reports for targeted
-                  research
-                </p>
-              </div>
-              <div className="rounded-lg bg-white p-6 shadow-sm">
-                <Plane className="mb-3 h-8 w-8 text-green-600" />
-                <h3 className="mb-2 font-semibold text-gray-900">
-                  Comprehensive
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Access detailed investigation reports from Indian aviation
-                  authorities
-                </p>
-              </div>
-            </div>
           </div>
         )}
       </main>
