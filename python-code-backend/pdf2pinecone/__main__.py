@@ -1,11 +1,12 @@
 import argparse
 import glob
 import os
+import json
 import logging
 from tqdm import tqdm
 from pdf2pinecone.config import load_config
 from pdf2pinecone.logger import setup_logger
-from pdf2pinecone.pdf_utils import extract_text_from_pdf, clean_text
+from pdf2pinecone.pdf_utils import extract_text_from_pdf, clean_text, extract_structure_from_pdf, generate_document_summary
 from pdf2pinecone.pinecone_utils import create_chunks, setup_pinecone_index, upload_to_pinecone
 import openai
 from pinecone import Pinecone
@@ -56,6 +57,17 @@ def main():
         logging.info(f"Found {len(pdf_files)} {category} PDF files to process")
         total_files += len(pdf_files)
         
+        # Load URL mapping for this category
+        url_mapping_file = os.path.join(os.path.dirname(pdf_folder), f"{category}_url_mapping.json")
+        url_mapping = {}
+        if os.path.exists(url_mapping_file):
+            try:
+                with open(url_mapping_file, 'r') as f:
+                    url_mapping = json.load(f)
+                logging.info(f"Loaded URL mapping for {category}: {len(url_mapping)} entries")
+            except Exception as e:
+                logging.warning(f"Could not load URL mapping: {e}")
+        
         for pdf_path in tqdm(pdf_files, desc=f"Processing {category} PDFs"):
             filename = os.path.basename(pdf_path)
             text = extract_text_from_pdf(pdf_path)
@@ -63,9 +75,28 @@ def main():
                 logging.warning(f"No text extracted from {filename}")
                 continue
             cleaned_text = clean_text(text)
-            chunks = create_chunks(cleaned_text, filename, chunk_size, chunk_overlap, pdf_folder, category)
+            
+            # Extract structure and generate document summary
+            logging.info(f"Extracting structure and generating summary for {filename}")
+            structure = extract_structure_from_pdf(pdf_path)
+            doc_summary = generate_document_summary(cleaned_text, structure, filename)
+            
+            # Get data-url for this file if available
+            data_url = url_mapping.get(filename, '')
+            
+            # Create chunks with document summary and URL in metadata
+            chunks = create_chunks(
+                cleaned_text, 
+                filename, 
+                chunk_size, 
+                chunk_overlap, 
+                pdf_folder, 
+                category,
+                doc_summary=doc_summary,
+                data_url=data_url
+            )
             all_chunks.extend(chunks)
-            logging.info(f"Created {len(chunks)} chunks from {category}/{filename}")
+            logging.info(f"Created {len(chunks)} chunks from {category}/{filename} with summary")
     
     if not all_chunks:
         logging.error("No chunks created from any PDFs")

@@ -4,6 +4,9 @@ export interface SearchResult {
   content?: string | null
   score?: number | null
   category?: 'INCIDENT' | 'ACCIDENT' | null
+  doc_summary?: string | null
+  doc_summary_points?: string[] | null
+  data_url?: string | null
 }
 
 export interface SearchResponse {
@@ -11,6 +14,8 @@ export interface SearchResponse {
   query: string
   total_results: number
   search_time: number
+  summary?: string
+  summary_points?: string[]
 }
 
 export interface SearchFilters {

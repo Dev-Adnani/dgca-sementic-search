@@ -1,15 +1,40 @@
 import os
 import hashlib
-from typing import List, Dict, Any
+import json
+from typing import List, Dict, Any, Optional
 from pinecone import Pinecone, ServerlessSpec
 import openai
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-def create_chunks(text: str, filename: str, chunk_size: int, chunk_overlap: int, pdf_folder: str, category: str) -> List[Dict[str, Any]]:
+def create_chunks(
+    text: str, 
+    filename: str, 
+    chunk_size: int, 
+    chunk_overlap: int, 
+    pdf_folder: str, 
+    category: str,
+    doc_summary: Optional[Dict[str, Any]] = None,
+    data_url: str = ''
+) -> List[Dict[str, Any]]:
     words = text.split()
     chunks = []
+    
+    # Prepare summary metadata (same for all chunks from same document)
+    summary_metadata = {}
+    if doc_summary:
+        # Store summary as JSON string in metadata (Pinecone metadata has size limits)
+        summary_metadata = {
+            'doc_summary': doc_summary.get('summary', ''),
+            'doc_summary_points': json.dumps(doc_summary.get('summary_points', [])),
+            'doc_key_sections': json.dumps(doc_summary.get('key_sections', []))
+        }
+    
+    # Add data_url if available
+    if data_url:
+        summary_metadata['data_url'] = data_url
+    
     for i in range(0, len(words), chunk_size - chunk_overlap):
         chunk_words = words[i:i + chunk_size]
         chunk_text = ' '.join(chunk_words)
@@ -24,7 +49,8 @@ def create_chunks(text: str, filename: str, chunk_size: int, chunk_overlap: int,
                 'word_count': len(chunk_words),
                 'char_count': len(chunk_text),
                 'source_path': os.path.join(pdf_folder, filename),
-                'text': chunk_text
+                'text': chunk_text,
+                **summary_metadata  # Add summary metadata to all chunks
             }
         }
         chunks.append(chunk_data)
