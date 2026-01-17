@@ -1,75 +1,59 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Search, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from 'react'
+import { Search, Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface SearchBarProps {
-  onSearch: (query: string) => void;
-  placeholder?: string;
-  className?: string;
-  loading?: boolean;
+  onSearch: (query: string) => void
+  placeholder?: string
+  className?: string
+  loading?: boolean
 }
 
 export default function SearchBar({
   onSearch,
-  placeholder = "Search incidents, accidents, or specific aircraft...",
+  placeholder = 'Search incidents, accidents, or aircraft...',
   className,
-  loading = false,
+  loading = false
 }: SearchBarProps) {
-  const [query, setQuery] = useState("");
-  const [isFocused, setIsFocused] = useState(false);
+  const [query, setQuery] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (query.trim()) {
-      onSearch(query.trim());
+      onSearch(query.trim())
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit} className={cn("relative w-full", className)}>
-      <div
-        className={cn(
-          "group relative flex w-full items-center overflow-hidden rounded-full border bg-white shadow-lg transition-all duration-300 dark:bg-card",
-          isFocused
-            ? "border-primary/50 shadow-xl shadow-primary/5 ring-4 ring-primary/10"
-            : "border-border/50 hover:border-border hover:shadow-xl",
-        )}
-      >
-        <div className="flex h-16 w-16 items-center justify-center text-muted-foreground transition-colors group-focus-within:text-primary pl-2">
-          {loading ? (
-            <Loader2 className="h-6 w-6 animate-spin" />
-          ) : (
-            <Search className="h-6 w-6" />
-          )}
+    <form onSubmit={handleSubmit} className={cn('relative w-full', className)}>
+      <div className="flex w-full items-center rounded-full border border-slate-300 bg-white shadow-sm transition-all focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/20">
+        <div className="flex h-14 w-14 items-center justify-center text-slate-400">
+          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
         </div>
 
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
-          className="h-16 flex-1 bg-transparent pr-4 text-lg text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+          className="h-14 flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 focus:outline-none"
         />
 
-        <div className="pr-3">
-          <button
-            type="submit"
-            disabled={!query.trim() || loading}
-            className={cn(
-              "rounded-full px-8 py-3 text-sm font-semibold transition-all",
-              query.trim()
-                ? "bg-primary text-primary-foreground hover:bg-blue-700 hover:shadow-md active:scale-95"
-                : "bg-muted text-muted-foreground opacity-50 cursor-not-allowed",
-            )}
-          >
-            Search
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={!query.trim() || loading}
+          className={cn(
+            "mr-2 rounded-full px-5 py-2 text-sm font-medium transition-colors",
+            query.trim()
+              ? "bg-sky-500 text-white hover:bg-sky-600"
+              : "bg-slate-100 text-slate-400"
+          )}
+        >
+          Search
+        </button>
       </div>
     </form>
-  );
+  )
 }
