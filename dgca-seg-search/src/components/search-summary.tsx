@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import { ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { useState } from "react";
 
 interface SearchSummaryProps {
-  summary?: string
-  summaryPoints?: string[]
-  query: string
+  summary?: string;
+  summaryPoints?: string[];
+  query: string;
 }
 
 export default function SearchSummary({
@@ -14,15 +14,15 @@ export default function SearchSummary({
   summaryPoints,
   query,
 }: SearchSummaryProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(true);
 
   // If no summary data, don't render
   if (!summary && (!summaryPoints || summaryPoints.length === 0)) {
-    return null
+    return null;
   }
 
-  const points = summaryPoints || []
-  const hasMultiplePoints = points.length > 0
+  const points = summaryPoints || [];
+  const hasMultiplePoints = points.length > 0;
 
   return (
     <div className="mb-6 rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm">
@@ -42,13 +42,13 @@ export default function SearchSummary({
             <p className="text-sm text-gray-600">
               {hasMultiplePoints
                 ? `${points.length} key points extracted from search results`
-                : 'AI-generated summary'}
+                : "AI-generated summary"}
             </p>
           </div>
         </div>
         <button
           className="rounded-lg p-1 text-gray-500 transition-colors hover:bg-blue-100 hover:text-gray-700"
-          aria-label={isExpanded ? 'Collapse summary' : 'Expand summary'}
+          aria-label={isExpanded ? "Collapse summary" : "Expand summary"}
         >
           {isExpanded ? (
             <ChevronUp className="h-5 w-5" />
@@ -87,5 +87,5 @@ export default function SearchSummary({
         </div>
       )}
     </div>
-  )
+  );
 }

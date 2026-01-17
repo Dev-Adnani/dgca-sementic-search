@@ -1,197 +1,226 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { SearchResult } from '@/types/search'
-import { formatScore, formatFileName, truncateText } from '@/lib/utils'
-import { FileText, Calendar, Tag, ChevronDown, ChevronUp, Sparkles, ExternalLink } from 'lucide-react'
+import { useState } from "react";
+import { SearchResult } from "@/types/search";
+import { formatScore, formatFileName, truncateText } from "@/lib/utils";
+import {
+  FileText,
+  ChevronDown,
+  Sparkles,
+  ExternalLink,
+  ArrowUpRight,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface SearchResultCardProps {
-  result: SearchResult
-  searchQuery?: string
+  result: SearchResult;
+  searchQuery?: string;
 }
 
 export default function SearchResultCard({
   result,
   searchQuery,
 }: SearchResultCardProps) {
-  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false)
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const highlightText = (text: string | undefined | null) => {
-    if (!text || !searchQuery) return text || ''
+    if (!text || !searchQuery) return text || "";
 
-    const regex = new RegExp(`(${searchQuery})`, 'gi')
-    const parts = text.split(regex)
+    const regex = new RegExp(`(${searchQuery})`, "gi");
+    const parts = text.split(regex);
 
     return parts.map((part, index) => {
       if (part.toLowerCase() === searchQuery.toLowerCase()) {
         return (
-          <mark key={index} className="rounded bg-yellow-200 px-1">
+          <mark
+            key={index}
+            className="bg-yellow-100 text-yellow-800 rounded-sm px-0.5 font-medium"
+          >
             {part}
           </mark>
-        )
+        );
       }
-      return part
-    })
-  }
+      return part;
+    });
+  };
 
-  // Add defensive checks for all result properties
+  // Defensive checks
   const safeResult = {
-    file_name: result?.file_name || 'Unknown File',
+    file_name: result?.file_name || "Unknown File",
     chunk_id: result?.chunk_id || 0,
-    content: result?.content || 'No content available',
+    content: result?.content || "No content available",
     score: result?.score || 0,
-    category: result?.category || 'INCIDENT',
+    category: result?.category || "INCIDENT",
     doc_summary: result?.doc_summary || null,
     doc_summary_points: result?.doc_summary_points || null,
     data_url: result?.data_url || null,
-  }
-  
-  // Build DGCA URL if data_url is available
-  // Based on actual DGCA URL patterns:
-  // Accident: ...dynamicPdf/{data-url}&mainAccidentReports/500005/0/viewApplicationDtlsReq
-  // Incident: ...dynamicPdf/{data-url}&mainIncidentReports/500006/0/viewApplicationDtlsReq
-  const getDgcaUrl = () => {
-    if (!safeResult.data_url) return null
-    
-    const baseUrl = 'https://www.dgca.gov.in/digigov-portal/?baseLocale=en_US?dynamicPage=dynamicPdf/'
-    
-    // Build the full URL based on category
-    if (safeResult.category === 'INCIDENT') {
-      // Incident reports use 500006
-      return `${baseUrl}${safeResult.data_url}&mainIncidentReports/500006/0/viewApplicationDtlsReq`
-    } else {
-      // Accident reports use 500005
-      return `${baseUrl}${safeResult.data_url}&mainAccidentReports/500005/0/viewApplicationDtlsReq`
-    }
-  }
-  
-  const dgcaUrl = getDgcaUrl()
+  };
 
-  // Parse summary points if it's a JSON string
-  let summaryPoints: string[] = []
+  const getDgcaUrl = () => {
+    if (!safeResult.data_url) return null;
+    const baseUrl =
+      "https://www.dgca.gov.in/digigov-portal/?baseLocale=en_US?dynamicPage=dynamicPdf/";
+    if (safeResult.category === "INCIDENT") {
+      return `${baseUrl}${safeResult.data_url}&mainIncidentReports/500006/0/viewApplicationDtlsReq`;
+    } else {
+      return `${baseUrl}${safeResult.data_url}&mainAccidentReports/500005/0/viewApplicationDtlsReq`;
+    }
+  };
+
+  const dgcaUrl = getDgcaUrl();
+  const isIncident = safeResult.category === "INCIDENT";
+
+  // Parse summary points
+  let summaryPoints: string[] = [];
   if (safeResult.doc_summary_points) {
-    if (typeof safeResult.doc_summary_points === 'string') {
+    if (typeof safeResult.doc_summary_points === "string") {
       try {
-        summaryPoints = JSON.parse(safeResult.doc_summary_points)
+        summaryPoints = JSON.parse(safeResult.doc_summary_points);
       } catch {
-        summaryPoints = []
+        summaryPoints = [];
       }
     } else if (Array.isArray(safeResult.doc_summary_points)) {
-      summaryPoints = safeResult.doc_summary_points
+      summaryPoints = safeResult.doc_summary_points;
     }
   }
-
-  const hasSummary = safeResult.doc_summary || summaryPoints.length > 0
+  const hasSummary = safeResult.doc_summary || summaryPoints.length > 0;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-      {/* Header */}
-      <div className="mb-4 flex items-start justify-between">
-        <div className="flex items-center space-x-2">
-          <FileText className="h-5 w-5 text-blue-600" />
-        </div>
-        <div className="flex items-center space-x-2">
-          <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              safeResult.category === 'INCIDENT'
-                ? 'bg-yellow-100 text-yellow-800'
-                : 'bg-red-100 text-red-800'
-            }`}
-          >
-            <Tag className="mr-1 h-3 w-3" />
-            {safeResult.category}
-          </span>
-          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-            {formatScore(safeResult.score)} match
-          </span>
-        </div>
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      layout
+      className="group relative overflow-hidden rounded-xl border border-border/60 bg-white p-6 shadow-sm transition-all hover:border-primary/20 hover:shadow-lg dark:bg-card"
+    >
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="mb-4 flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
+                isIncident
+                  ? "bg-orange-50 text-orange-600"
+                  : "bg-red-50 text-red-600",
+              )}
+            >
+              <FileText className="h-6 w-6" />
+            </div>
+            <div>
+              <h3
+                className="line-clamp-1 text-lg font-bold text-foreground group-hover:text-primary transition-colors"
+                title={safeResult.file_name}
+              >
+                {formatFileName(safeResult.file_name)}
+              </h3>
+              <div className="flex items-center gap-2 mt-1">
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold uppercase tracking-wide",
+                    isIncident
+                      ? "bg-orange-100 text-orange-700"
+                      : "bg-red-100 text-red-700",
+                  )}
+                >
+                  {safeResult.category}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  ID: {safeResult.chunk_id}
+                </span>
+              </div>
+            </div>
+          </div>
 
-      {/* File name */}
-      <div className="mb-3">
-        <h3 className="text-lg leading-tight font-semibold text-gray-900">
-          {formatFileName(safeResult.file_name)}
-        </h3>
-        <p className="mt-1 text-sm text-gray-500">{safeResult.file_name}</p>
-      </div>
-
-      {/* Content */}
-      <div className="prose prose-sm max-w-none">
-        <p className="leading-relaxed text-gray-700">
-          {highlightText(truncateText(safeResult.content, 300))}
-        </p>
-      </div>
-
-      {/* Document Summary Accordion */}
-      {hasSummary && (
-        <div className="mt-4 border-t border-gray-200 pt-4">
-          <button
-            onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-            className="flex w-full items-center justify-between rounded-lg bg-blue-50 px-4 py-3 text-left transition-colors hover:bg-blue-100"
-          >
-            <div className="flex items-center space-x-2">
-              <Sparkles className="h-4 w-4 text-blue-600" />
-              <span className="font-medium text-gray-900">
-                Document Summary
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col items-end">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Relavence
+              </span>
+              <span className="text-lg font-bold text-primary">
+                {formatScore(safeResult.score)}
               </span>
             </div>
-            {isSummaryExpanded ? (
-              <ChevronUp className="h-5 w-5 text-gray-600" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-600" />
-            )}
-          </button>
-
-          {isSummaryExpanded && (
-            <div className="mt-3 rounded-lg border border-blue-100 bg-white p-4">
-              {summaryPoints.length > 0 ? (
-                <ul className="space-y-2">
-                  {summaryPoints.map((point, index) => (
-                    <li
-                      key={index}
-                      className="flex items-start space-x-3 text-sm text-gray-700"
-                    >
-                      <span className="mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
-                        {index + 1}
-                      </span>
-                      <span className="flex-1 leading-relaxed">{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm leading-relaxed text-gray-700">
-                  {safeResult.doc_summary}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="mt-4 border-t border-gray-100 pt-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-1 text-xs text-gray-500">
-            <Calendar className="h-3 w-3" />
-            <span>DGCA Aviation Report</span>
           </div>
-          <div className="flex items-center space-x-3">
-            {dgcaUrl && (
-              <a
-                href={dgcaUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center space-x-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+        </div>
+
+        {/* Content Body */}
+        <div className="prose prose-sm prose-slate max-w-none text-muted-foreground mb-6 dark:prose-invert">
+          <p className="leading-relaxed">
+            {highlightText(truncateText(safeResult.content, 280))}
+          </p>
+        </div>
+
+        {/* AI Summary (Accordion) */}
+        {hasSummary && (
+          <div className="mb-5 rounded-lg bg-slate-50 border border-slate-100 dark:bg-slate-900/50 dark:border-slate-800">
+            <motion.button
+              type="button"
+              onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+              className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/50"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">
+                  AI Intelligence Brief
+                </span>
+              </div>
+              <motion.div
+                animate={{ rotate: isSummaryExpanded ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
               >
-                <ExternalLink className="h-3 w-3" />
-                <span>View PDF</span>
-              </a>
-            )}
-            <span className="text-xs text-gray-400">
-              Report ID: {safeResult.chunk_id}
-            </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </motion.div>
+            </motion.button>
+
+            <AnimatePresence>
+              {isSummaryExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 pb-4 pt-1 border-t border-slate-200/50 dark:border-slate-800">
+                    {summaryPoints.length > 0 ? (
+                      <ul className="space-y-2 mt-2">
+                        {summaryPoints.map((point, index) => (
+                          <li
+                            key={index}
+                            className="flex items-start gap-2 text-sm text-foreground/80"
+                          >
+                            <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary/40" />
+                            <span className="leading-relaxed">{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-2 text-sm text-foreground/80 leading-relaxed">
+                        {safeResult.doc_summary}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
+        )}
+
+        {/* Footer */}
+        {dgcaUrl && (
+          <div className="flex justify-end pt-2">
+            <a
+              href={dgcaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group/btn inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-blue-700 hover:underline underline-offset-4"
+            >
+              <span>View Official Report</span>
+              <ArrowUpRight className="h-4 w-4 transition-transform group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5" />
+            </a>
+          </div>
+        )}
       </div>
-    </div>
-  )
+    </motion.div>
+  );
 }

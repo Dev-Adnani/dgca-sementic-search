@@ -1,31 +1,29 @@
-'use client'
+"use client";
 
-import { SearchCategory } from '@/types/search'
-import { cn } from '@/lib/utils'
+import { SearchCategory } from "@/types/search";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface CategoryFilterProps {
-  selected: SearchCategory
-  onSelect: (category: SearchCategory) => void
-  className?: string
+  selected: SearchCategory;
+  onSelect: (category: SearchCategory) => void;
+  className?: string;
 }
 
 const categories = [
   {
-    value: 'all' as const,
-    label: 'All Reports',
-    color: 'bg-gray-100 text-gray-700',
+    value: "all" as const,
+    label: "All Reports",
   },
   {
-    value: 'incident' as const,
-    label: 'Incidents',
-    color: 'bg-yellow-100 text-yellow-700',
+    value: "incident" as const,
+    label: "Incidents",
   },
   {
-    value: 'accident' as const,
-    label: 'Accidents',
-    color: 'bg-red-100 text-red-700',
+    value: "accident" as const,
+    label: "Accidents",
   },
-]
+];
 
 export default function CategoryFilter({
   selected,
@@ -33,21 +31,37 @@ export default function CategoryFilter({
   className,
 }: CategoryFilterProps) {
   return (
-    <div className={cn('flex flex-wrap gap-2', className)}>
-      {categories.map((category) => (
-        <button
-          key={category.value}
-          onClick={() => onSelect(category.value)}
-          className={cn(
-            'rounded-full px-4 py-2 text-sm font-medium transition-all',
-            selected === category.value
-              ? `${category.color} ring-2 ring-blue-500 ring-offset-2`
-              : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
-          )}
-        >
-          {category.label}
-        </button>
-      ))}
+    <div
+      className={cn(
+        "flex flex-wrap gap-2 rounded-full border border-border/50 bg-background/50 p-1 backdrop-blur-sm",
+        className,
+      )}
+    >
+      {categories.map((category) => {
+        const isSelected = selected === category.value;
+        return (
+          <button
+            type="button"
+            key={category.value}
+            onClick={() => onSelect(category.value)}
+            className={cn(
+              "relative rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus:outline-none",
+              isSelected
+                ? "text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {isSelected && (
+              <motion.div
+                layoutId="activeCategory"
+                className="absolute inset-0 rounded-full bg-primary"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10">{category.label}</span>
+          </button>
+        );
+      })}
     </div>
-  )
+  );
 }
